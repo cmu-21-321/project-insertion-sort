@@ -118,6 +118,14 @@ theorem insertionSort_perm (xs : List Nat) :
         (List.Perm.cons x ih)
 
 /--
+Insertion sort preserves the length of the input list.
+This follows from permutation preservation.
+-/
+theorem insertionSort_length (xs : List Nat) :
+    (insertionSort xs).length = xs.length := by
+  exact (insertionSort_perm xs).length_eq
+
+/--
 Insertion sort is idempotent: sorting an already sorted result
 does not change it.
 

@@ -1,67 +1,115 @@
-# InsertionSort
+# Formal Verification of Insertion Sort in Lean 4
 
-A template for Lean 4 projects that depend on [Mathlib](https://github.com/leanprover-community/mathlib4).
+## Project Overview
 
-## Prerequisites
+This project implements insertion sort for lists of natural numbers in Lean 4 and formally verifies its correctness using Mathlib.
 
-Install Lean via [elan](https://github.com/leanprover/elan) (see the
-[Lean installation guide](https://lean-lang.org/install/)). The correct Lean version is
-picked up automatically from `lean-toolchain`.
+The primary goal is to prove that insertion sort produces a sorted permutation of its input. This means the resulting list is ordered and contains exactly the same elements, including duplicates.
 
-## 1. Rename the project
+The project also establishes that insertion sort preserves list length and is idempotent: sorting an already sorted result does not change it.
 
-After creating your repository from this template, rename it from `ProjectTemplate` to your
-own project name:
+## Implementation
 
-```bash
-./customize.sh MyProject
+The implementation consists of two recursive functions:
+
+- `insert`: Inserts a natural number into its correct position in an already sorted list.
+- `insertionSort`: Recursively sorts a list by sorting its tail and inserting its head into the sorted result.
+
+Both functions operate on `List Nat` and use the standard ordering relation `≤`.
+
+## Formal Verification
+
+The main correctness results are proved in `InsertionSort/Basic.lean`.
+
+### Permutation Preservation
+
+- `insert_perm`: Inserting an element produces a permutation of the original list with the inserted element added.
+- `insertionSort_perm`: Insertion sort returns a permutation of its input.
+
+### Sortedness
+
+- `insert_sorted`: Inserting an element into a sorted list preserves sortedness.
+- `insertionSort_sorted`: Insertion sort produces a sorted list.
+
+Sortedness is expressed using `List.Pairwise (· ≤ ·)`, which requires every earlier element to be less than or equal to every later element.
+
+Together, `insertionSort_sorted` and `insertionSort_perm` establish the main correctness property of insertion sort.
+
+### Idempotence
+
+- `insertionSort_idempotent`: Applying insertion sort twice produces the same result as applying it once.
+
+The proof uses permutation preservation, sortedness, and the uniqueness of sorted permutations under the natural-number ordering.
+
+### Length Preservation
+
+Insertion sort preserves the length of its input:
+
+```lean
+(insertionSort xs).length = xs.length
 ```
 
-This updates `lakefile.toml`, `lake-manifest.json`, the Lean imports and this README's title, and
-renames `ProjectTemplate.lean` and `ProjectTemplate/` to `MyProject.lean` and `MyProject/`.
-The name must be a valid Lean module name (letters, digits and underscores, starting with a
-letter; UpperCamelCase is conventional). Commit the result, then delete `customize.sh`.
+This property follows from permutation preservation, since permutations contain the same elements with the same multiplicities.
 
-## 2. Get the Mathlib cache
+## Proof Techniques
 
-Compiling Mathlib from source takes hours, so download the prebuilt files instead:
+The formalization uses structural induction on lists, case analysis, recursive definitions, and properties of permutations and ordered lists.
+
+The proofs build on previously established lemmas. In particular, the correctness of insertion sort is derived from the properties of the insertion operation.
+
+The implementation and proofs are written for lists of natural numbers, rather than relying on Mathlib's existing insertion sort implementation.
+
+## Project Structure
+
+- `InsertionSort/Basic.lean` — Implementation, theorem statements, formal proofs, and evaluation examples.
+- `InsertionSort.lean` — Main module importing the formalization.
+- `lakefile.toml` — Lean and Mathlib project configuration.
+- `lean-toolchain` — Lean version configuration.
+
+## Building the Project
+
+Install Lean 4 using [elan](https://github.com/leanprover/elan).
+
+Download the Mathlib cache:
 
 ```bash
 lake exe cache get
 ```
 
-Re-run this whenever you change the Mathlib version (or if your editor starts rebuilding
-Mathlib files).
-
-## 3. Build and work on the project
+Build and verify the project:
 
 ```bash
 lake build
 ```
 
-- Put your Lean files under `MyProject/` and import each one from `MyProject.lean`, so that
-  `lake build` (and CI) checks them.
-- Open the repository folder (not a single file) in VS Code with the Lean 4 extension.
+A successful build confirms that Lean accepts the definitions and proofs in the project. The formalization is intended to compile without unproved `sorry` placeholders.
 
-## Updating Mathlib
+## Example Evaluations
 
-Change the `rev` under `[[require]]` in `lakefile.toml` to the new Mathlib tag, and set
-`lean-toolchain` to match. Then run:
+The implementation includes examples such as:
 
-```bash
-lake update mathlib
-lake exe cache get
-lake build
+```lean
+#eval insertionSort [5, 2, 4, 1, 3]
+-- [1, 2, 3, 4, 5]
+
+#eval insertionSort [9, 7, 5, 3, 1]
+-- [1, 3, 5, 7, 9]
+
+#eval insertionSort [3, 1, 3, 2]
+-- [1, 2, 3, 3]
 ```
 
-Alternatively, run the **Update Dependencies** workflow from the GitHub *Actions* tab: it
-opens a pull request if the update builds, or an issue if it doesn't. (Uncomment the
-`schedule` block in `.github/workflows/update.yml` to run it automatically.)
+These examples illustrate the implementation's behavior. The formal correctness proofs establish the corresponding properties for arbitrary lists of natural numbers, rather than only the tested examples.
 
-## GitHub setup
+## References
 
-- **CI**: every push and pull request is built by `.github/workflows/lean_action_ci.yml`.
-- To let the update workflow open pull requests, go to **Settings → Actions → General** and
-  tick **Allow GitHub Actions to create and approve pull requests**.
-- To publish docs to GitHub Pages, set **Settings → Pages → Source** to "GitHub Actions" and
-  uncomment the `docgen-action` line in `lean_action_ci.yml`.
+- [Theorem Proving in Lean 4](https://leanprover.github.io/theorem_proving_in_lean4/)
+- [Mathematics in Lean](https://leanprover-community.github.io/mathematics_in_lean/)
+- [Mathlib Documentation](https://leanprover-community.github.io/mathlib4_docs/)
+- [Mathlib Style Guide](https://leanprover-community.github.io/contribute/style.html)
+
+## Course Context
+
+Carnegie Mellon University — 21-321: Interactive Theorem Proving
+
+Fall 2026
